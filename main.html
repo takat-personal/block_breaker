@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.ico">
+    <title>ブロック崩しゲーム</title>
+    <style>
+        * {padding:0;margin: 20px;}
+        canvas {background:#eee; display:block;margin:0 auto;}
+    </style>
+</head>
+<body>
+<canvas id="myCanvas", width="480" height="320"></canvas>
+<script>
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+
+    //ボールの設定
+    let ball_x = canvas.width/2;
+    let ball_y = 200;
+    let ball_speed = 8;
+    let dx = Math.random() + 1.5;
+    let dy = Math.sqrt((ball_speed - dx*dx)) * -1;
+    const ballRadius = 8;
+    let ballColor = 'hsl(200, 100%, 50%)'
+
+    //パドルの設定
+    const paddleHeight = 12;
+    const paddleWidth = 72;
+    let paddleX = (canvas.width - paddleWidth) / 2;
+
+    // キーボードの入力
+    let rightPressed = false;
+    let leftPressed = false;
+    
+    //残機
+    let life = 3;
+
+    function drawBall(){
+        ctx.beginPath();
+        ctx.arc(ball_x, ball_y, ballRadius, 0, Math.PI*2);
+        ctx.fillStyle = ballColor;
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    function changeBallColor(){
+        let hue = Math.floor(Math.random() * 181);
+        ballColor = `hsl(${hue}, 100%, 50%)`
+    }
+
+    function drawPaddle(){
+        ctx.beginPath();
+        ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+        ctx.fillStyle = "blue";
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
+    function keyDownHandler(e){
+        if (e.key === "Right" || e.key === "ArrowRight"){
+            rightPressed = true; 
+        }else if (e.key === "left" || e.key === "ArrowLeft"){
+            leftPressed = true;
+        }
+    }
+
+    function keyUpHandler(e){
+        if (e.key === "Right" || e.key === "ArrowRight"){
+            rightPressed = false; 
+        }else if (e.key === "left" || e.key === "ArrowLeft"){
+            leftPressed = false;
+        }
+    }
+
+    const brickRowCount = 3;
+    const brickColumnCount = 5;
+    const brickWidth = 75;
+    const brickHeight = 20;
+    const brickPadding = 10;
+    const brickOffsetTop = 30;
+    const brickOffsetLeft = 30;
+
+    const bricks = [];
+    for (let c = 0; c < brickColumnCount; c ++){
+        bricks[c] = [];
+        for (let r = 0; r < brickRowCount; r ++){
+            bricks[c][r] = {x: 0, y: 0, status: 1};
+        }
+    }
+
+    function drawBricks(){
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                if (bricks[c][r].status == 1){
+                    let brickX = (c *(brickWidth + brickPadding)) + brickOffsetLeft;
+                    let brickY = (r *(brickHeight + brickPadding)) + brickOffsetTop;
+                    bricks[c][r].x = brickX;
+                    bricks[c][r].y = brickY;
+                    ctx.beginPath();
+                    ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                    ctx.fillStyle = "#0095DD";
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+    
+    function collisionDetection(){
+        for (let c = 0; c < brickColumnCount; c ++){
+            for (let r = 0; r< brickRowCount; r ++){
+                const b = bricks[c][r];
+                if (b.status == 1){
+                    if (ball_x > b.x && ball_x < b.x + brickWidth && ball_y + ballRadius> b.y && ball_y - ballRadius< b.y + brickHeight){
+                    dy= -dy;
+                    b.status = 0;
+                    changeBallColor();
+                    score++;
+                    if (score === brickRowCount * brickColumnCount){
+                        alert("Congratulations!");
+                        document.location.reload();
+                        clearInterval(interval);
+                    }
+                    }
+                }
+            }
+        }
+    }
+
+    let score = 0;
+
+    function drawScore(){
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#0095DD"
+        ctx.fillText(`Score: ${score}`, 8, 20);
+    }
+
+    function draw(){
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        drawBall();
+        ball_x += dx;
+        ball_y += dy;
+
+        //壁の衝突判定
+        if (ball_x + ballRadius> canvas.width|| ball_x - ballRadius< 0){
+            dx = -dx;
+        }
+        if (ball_y - ballRadius < 0){
+            dy = -dy;
+        }
+
+        drawPaddle();
+
+        //パドルの上部の衝突判定
+        if (ball_y > canvas.height - paddleHeight){
+            if(Math.abs(paddleX - ball_x) <= ballRadius){
+                dx = -dx;
+                ball_x = paddleX - 1 - ballRadius;
+                console.log('横1');
+            }else if(Math.abs(ball_x - paddleX - paddleWidth) <= ballRadius){
+                ball_x = paddleX + paddleWidth + 1 + ballRadius;
+                dx = -dx;
+                console.log('横2');
+            }
+        }else if (ball_y + ballRadius > canvas.height - paddleHeight && ball_x + ballRadius > paddleX && ball_x - ballRadius < paddleX + paddleWidth){
+            dy = -dy;
+            console.log('上');
+        }
+        
+        //パドルの角の衝突判定
+        if (Math.pow(paddleX-ball_x, 2) + Math.pow(canvas.height - paddleHeight, 2) <= Math.pow(ballRadius, 2)){
+            dx = -dx;
+            dy = -dy;
+        }
+
+        if ((ball_y + ballRadius > canvas.height)){
+            if (life === 0){
+                alert('終わりです');
+                document.location.reload();
+                clearInterval(interval);
+            }
+            life -= 1;
+            
+        }
+
+        if (rightPressed){
+            paddleX = Math.min(paddleX + 6, canvas.width - paddleWidth);
+        }else if (leftPressed){
+            paddleX = Math.max(paddleX - 6, 0);
+        }
+        drawBricks();
+        collisionDetection();
+        drawScore();
+    }
+
+    const interval = setInterval(draw, 10);
+</script>
+
+</body>
+</html>

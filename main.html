@@ -22,24 +22,31 @@
         wait = true;
         paddleX = (canvas.width - paddleWidth) / 2;
         ball_x = canvas.width/2;
-        ball_y = 300;
+        ball_y = canvas.height - paddleHeight - ballRadius;
         ballColor = 'hsl(200, 100%, 50%)';
     }
-    
-    let ball_x = canvas.width/2;
-    let ball_y = 300;
-    let dx = 0;
-    let dy = 0;
+
+    //パドルの設定
+    const paddleHeight = 12;
+    const paddleWidth = 72;
+    let paddleX = (canvas.width - paddleWidth) / 2;
+
+    //ボールの設定
     const ballRadius = 8;
     let ballColor = 'hsl(200, 100%, 50%)';
+
+    let ball_x = canvas.width/2;
+    let ball_y = canvas.height - paddleHeight - ballRadius;
+    let dx = 0;
+    let dy = 0;
 
     let theta = 0;
     let d_theta = Math.PI / 150;
     function ballSpeed(){
         ctx.beginPath();
         ctx.setLineDash([2, 5]);
-        ctx.moveTo(canvas.width/2, 300);
-        ctx.lineTo(canvas.width/2 + (Math.sin(theta) * 60), 300 - (Math.cos(theta) * 60));
+        ctx.moveTo(canvas.width/2, canvas.height - paddleHeight - ballRadius);
+        ctx.lineTo(canvas.width/2 + (Math.sin(theta) * 60), canvas.height - paddleHeight - ballRadius - (Math.cos(theta) * 60));
         ctx.strokeStyle = "#0000cd";
         ctx.stroke();
         if (theta > Math.PI / 3 || theta < -Math.PI / 3){
@@ -51,12 +58,7 @@
     }
     //待機
     let wait = true;
-    console.log(wait);
-
-    //パドルの設定
-    const paddleHeight = 12;
-    const paddleWidth = 72;
-    let paddleX = (canvas.width - paddleWidth) / 2;
+    //console.log(wait);
 
     // キーボードの入力
     let rightPressed = false;
@@ -71,19 +73,19 @@
     }
 
     function drawBall(){
+        if (!wait){
+            ball_x += dx;
+            ball_y += dy;
+        }
         ctx.beginPath();
         ctx.arc(ball_x, ball_y, ballRadius, 0, Math.PI*2);
         ctx.fillStyle = ballColor;
         ctx.fill();
         ctx.closePath();
-        if (!wait){
-            ball_x += dx;
-            ball_y += dy;
-        }
     }
 
     function changeBallColor(){
-        let hue = Math.floor(Math.random() * 181);
+        let hue = Math.floor(Math.random() * 361);
         ballColor = `hsl(${hue}, 100%, 50%)`
     }
 
@@ -116,7 +118,7 @@
         }
     }
 
-    const brickRowCount = 3;
+    const brickRowCount = 4;
     const brickColumnCount = 5;
     const brickWidth = 75;
     const brickHeight = 20;
@@ -155,17 +157,21 @@
             for (let r = 0; r< brickRowCount; r ++){
                 const b = bricks[c][r];
                 if (b.status == 1){
-                    if (ball_x > b.x && ball_x < b.x + brickWidth && ball_y + ballRadius> b.y && ball_y - ballRadius< b.y + brickHeight){
-                    dy= -dy;
-                    b.status = 0;
-                    changeBallColor();
-                    score++;
+                    if (ball_x > b.x && ball_x < b.x + brickWidth && (Math.abs(ball_y - b.y - brickHeight) <= ballRadius || Math.abs(ball_y - b.y) <= ballRadius)){
+                        dy= -dy;
+                        b.status = 0;
+                        changeBallColor();
+                        score++;
+                    }else if(ball_y > b.y && ball_y < b.y + brickHeight && (Math.abs(ball_x - b.x) <= ballRadius || Math.abs(ball_x - b.x - brickWidth) <= ballRadius)){
+                        dx = -dx;
+                        b.status = 0;
+                        score++;
+                    }
                     if (score === brickRowCount * brickColumnCount){
-                        alert("Congratulations!");
-                        document.location.reload();
-                        clearInterval(interval);
-                    }
-                    }
+                            alert("Congratulations!");
+                            document.location.reload();
+                            clearInterval(interval);
+                        }
                 }
             }
         }
@@ -195,34 +201,36 @@
             dy = -dy;
         }
 
-        drawPaddle();
+        //パドルの角の衝突判定
+        if (Math.pow(paddleX-ball_x, 2) + Math.pow(canvas.height - paddleHeight, 2) <= Math.pow(ballRadius, 2)){
+            dx = -dx;
+            dy = -dy;
+            ball_y = canvas.height - paddleHeight - 1;
+        }
 
         //パドルの上部の衝突判定
         if (ball_y > canvas.height - paddleHeight){
             if(Math.abs(paddleX - ball_x) <= ballRadius){
                 dx = -dx;
                 ball_x = paddleX - 1 - ballRadius;
-                console.log('横1');
+                //console.log('横1');
             }else if(Math.abs(ball_x - paddleX - paddleWidth) <= ballRadius){
                 ball_x = paddleX + paddleWidth + 1 + ballRadius;
                 dx = -dx;
-                console.log('横2');
+                //console.log('横2');
             }
         }else if (ball_y + ballRadius > canvas.height - paddleHeight && ball_x + ballRadius > paddleX && ball_x - ballRadius < paddleX + paddleWidth){
             dy = -dy;
-            console.log('上');
+            //console.log('上');
         }
-        
-        //パドルの角の衝突判定
-        if (Math.pow(paddleX-ball_x, 2) + Math.pow(canvas.height - paddleHeight, 2) <= Math.pow(ballRadius, 2)){
-            dx = -dx;
-            dy = -dy;
-        }
+
+        drawPaddle();
+
 
         if ((ball_y + ballRadius > canvas.height)){
             life -= 1;
             if(life <= 0){
-                alert("ゲームオーバー");
+                alert(`ゲームオーバー, スコアは${score}点`);
                 document.location.reload();
                 clearInterval(interval);
             }else{
@@ -231,9 +239,9 @@
         }
 
         if (rightPressed){
-            paddleX = Math.min(paddleX + 6, canvas.width - paddleWidth);
+            paddleX = Math.min(paddleX + 5, canvas.width - paddleWidth);
         }else if (leftPressed){
-            paddleX = Math.max(paddleX - 6, 0);
+            paddleX = Math.max(paddleX - 5, 0);
         }
         drawBricks();
         collisionDetection();
@@ -244,7 +252,7 @@
 
     document.addEventListener("keydown", KeyPressHandler, false);
     function KeyPressHandler(e){
-        console.log(wait, e);
+        //console.log(wait, e);
         if (e.key === " "){
             wait = false;
         }

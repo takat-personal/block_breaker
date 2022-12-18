@@ -18,14 +18,24 @@
     const ctx = canvas.getContext("2d");
 
     //ボールの設定
+    function init(){
+        ball_x = canvas.width/2;
+        ball_y = 200;
+        ball_speed = 8;
+        dx = Math.random() + 1.5;
+        dy = Math.sqrt((ball_speed - dx*dx)) * -1;
+        ballColor = 'hsl(200, 100%, 50%)';
+    }
+
+    
     let ball_x = canvas.width/2;
     let ball_y = 200;
     let ball_speed = 8;
     let dx = Math.random() + 1.5;
     let dy = Math.sqrt((ball_speed - dx*dx)) * -1;
     const ballRadius = 8;
-    let ballColor = 'hsl(200, 100%, 50%)'
-
+    let ballColor = 'hsl(200, 100%, 50%)';
+    
     //パドルの設定
     const paddleHeight = 12;
     const paddleWidth = 72;
@@ -37,6 +47,11 @@
     
     //残機
     let life = 3;
+    function drawLives(){
+        ctx.font = "16px Arial"
+        ctx.fillStyle = "#0095DD"
+        ctx.fillText(`Life: ${life}`, canvas.width - 65, 20);
+    }
 
     function drawBall(){
         ctx.beginPath();
@@ -180,13 +195,14 @@
         }
 
         if ((ball_y + ballRadius > canvas.height)){
-            if (life === 0){
-                alert('終わりです');
+            life -= 1;
+            if(life <= 0){
+                alert("ゲームオーバー");
                 document.location.reload();
                 clearInterval(interval);
+            }else{
+                init();
             }
-            life -= 1;
-            
         }
 
         if (rightPressed){
@@ -197,8 +213,8 @@
         drawBricks();
         collisionDetection();
         drawScore();
+        drawLives();
     }
-
     const interval = setInterval(draw, 10);
 </script>
 

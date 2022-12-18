@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.ico">
+    <link rel="icon" href="ball_favicon.ico">
     <title>ブロック崩しゲーム</title>
     <style>
         * {padding:0;margin: 20px;}
@@ -19,23 +19,40 @@
 
     //ボールの設定
     function init(){
+        wait = true;
+        paddleX = (canvas.width - paddleWidth) / 2;
         ball_x = canvas.width/2;
-        ball_y = 200;
-        ball_speed = 8;
-        dx = Math.random() + 1.5;
-        dy = Math.sqrt((ball_speed - dx*dx)) * -1;
+        ball_y = 300;
         ballColor = 'hsl(200, 100%, 50%)';
     }
-
     
     let ball_x = canvas.width/2;
-    let ball_y = 200;
-    let ball_speed = 8;
-    let dx = Math.random() + 1.5;
-    let dy = Math.sqrt((ball_speed - dx*dx)) * -1;
+    let ball_y = 300;
+    let dx = 0;
+    let dy = 0;
     const ballRadius = 8;
     let ballColor = 'hsl(200, 100%, 50%)';
-    
+
+    let theta = 0;
+    let d_theta = Math.PI / 150;
+    function ballSpeed(){
+        ctx.beginPath();
+        ctx.setLineDash([2, 5]);
+        ctx.moveTo(canvas.width/2, 300);
+        ctx.lineTo(canvas.width/2 + (Math.sin(theta) * 60), 300 - (Math.cos(theta) * 60));
+        ctx.strokeStyle = "#0000cd";
+        ctx.stroke();
+        if (theta > Math.PI / 3 || theta < -Math.PI / 3){
+            d_theta = -d_theta
+        }
+        theta += d_theta;
+        dx = 3 * Math.sin(theta);
+        dy = - 3 * Math.cos(theta);
+    }
+    //待機
+    let wait = true;
+    console.log(wait);
+
     //パドルの設定
     const paddleHeight = 12;
     const paddleWidth = 72;
@@ -59,6 +76,10 @@
         ctx.fillStyle = ballColor;
         ctx.fill();
         ctx.closePath();
+        if (!wait){
+            ball_x += dx;
+            ball_y += dy;
+        }
     }
 
     function changeBallColor(){
@@ -78,10 +99,12 @@
     document.addEventListener("keyup", keyUpHandler, false);
 
     function keyDownHandler(e){
-        if (e.key === "Right" || e.key === "ArrowRight"){
-            rightPressed = true; 
-        }else if (e.key === "left" || e.key === "ArrowLeft"){
-            leftPressed = true;
+        if(!wait){
+            if (e.key === "Right" || e.key === "ArrowRight"){
+                rightPressed = true; 
+            }else if (e.key === "left" || e.key === "ArrowLeft"){
+                leftPressed = true;
+            }
         }
     }
 
@@ -158,9 +181,11 @@
 
     function draw(){
         ctx.clearRect(0,0,canvas.width, canvas.height);
+        //待機中 or プレイ中
+        if (wait){
+            ballSpeed();
+        }
         drawBall();
-        ball_x += dx;
-        ball_y += dy;
 
         //壁の衝突判定
         if (ball_x + ballRadius> canvas.width|| ball_x - ballRadius< 0){
@@ -214,6 +239,15 @@
         collisionDetection();
         drawScore();
         drawLives();
+        
+    }
+
+    document.addEventListener("keydown", KeyPressHandler, false);
+    function KeyPressHandler(e){
+        console.log(wait, e);
+        if (e.key === " "){
+            wait = false;
+        }
     }
     const interval = setInterval(draw, 10);
 </script>

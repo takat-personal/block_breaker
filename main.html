@@ -13,6 +13,7 @@
 </head>
 <body>
 <canvas id="myCanvas", width="480" height="320"></canvas>
+<div style="text-align: center;">Press Space to Start/Restart the Game</div>
 <script>
     const canvas = document.getElementById("myCanvas");
     const ctx = canvas.getContext("2d");
@@ -66,12 +67,14 @@
     
     //残機
     let life = 3;
+    let livesColor = "#0095DD";
     function drawLives(){
         ctx.font = "16px Arial"
-        ctx.fillStyle = "#0095DD"
+        ctx.fillStyle = livesColor;
         ctx.fillText(`Life: ${life}`, canvas.width - 65, 20);
     }
 
+    //ボール描画
     function drawBall(){
         if (!wait){
             ball_x += dx;
@@ -86,15 +89,21 @@
 
     function changeBallColor(){
         let hue = Math.floor(Math.random() * 361);
-        ballColor = `hsl(${hue}, 100%, 50%)`
+        ballColor = `hsl(${hue}, 100%, 50%)`;
     }
 
+    //パドル描画
+    let paddleColor = "blue";
     function drawPaddle(){
         ctx.beginPath();
         ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-        ctx.fillStyle = "blue";
+        ctx.fillStyle = paddleColor;
         ctx.fill();
         ctx.closePath();
+    }
+    function changePaddleColor(){
+        let hue = Math.floor(Math.random()*360);
+        paddleColor = `hsl(${hue}, 100%, 50%`;
     }
 
     document.addEventListener("keydown", keyDownHandler, false);
@@ -160,13 +169,13 @@
                     if (ball_x > b.x && ball_x < b.x + brickWidth && (Math.abs(ball_y - b.y - brickHeight) <= ballRadius || Math.abs(ball_y - b.y) <= ballRadius)){
                         dy= -dy;
                         b.status = 0;
-                        changeBallColor();
+                        // changeBallColor();
                         score++;
                     }else if(ball_y > b.y && ball_y < b.y + brickHeight && (Math.abs(ball_x - b.x) <= ballRadius || Math.abs(ball_x - b.x - brickWidth) <= ballRadius)){
                         dx = -dx;
                         b.status = 0;
                         score++;
-                        changeBallColor();
+                        // changeBallColor();
                     }
                     if (score === brickRowCount * brickColumnCount){
                             alert("Congratulations!");
@@ -191,6 +200,7 @@
         //待機中 or プレイ中
         if (wait){
             ballSpeed();
+            init();
         }
         drawBall();
 
@@ -223,6 +233,7 @@
         }else if (ball_y + ballRadius > canvas.height - paddleHeight && ball_x + ballRadius > paddleX && ball_x - ballRadius < paddleX + paddleWidth){
             dy = -dy;
             //console.log('上');
+            // changePaddleColor();
         }
 
         drawPaddle();
@@ -235,14 +246,19 @@
                 document.location.reload();
                 clearInterval(interval);
             }else{
+                if(life == 2){
+                    livesColor = "#ff8c00";
+                }else{
+                    livesColor = "#ff0000";
+                }
                 init();
             }
         }
 
         if (rightPressed){
-            paddleX = Math.min(paddleX + 5, canvas.width - paddleWidth);
+            paddleX = Math.min(paddleX + 4, canvas.width - paddleWidth -5);
         }else if (leftPressed){
-            paddleX = Math.max(paddleX - 5, 0);
+            paddleX = Math.max(paddleX - 4, 5);
         }
         drawBricks();
         collisionDetection();

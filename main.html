@@ -10,16 +10,20 @@
     <style>
         * {padding:0;margin: 20px;}
         canvas {background:#eee; display:block;margin:0 auto;}
+        div #btn-box{
+            position:fixed;
+            bottom: 0px;
+        }
     </style>
 </head>
 <body>
-<canvas id="myCanvas", width="480" height="320"></canvas>
-<div style="text-align: center;">Press Space to Start/Restart the Game</div>
-
+    <div id="title">
+        <canvas id="title_canvas", width="480" height="320"></canvas>
+    </div>
+    <div id="game">
+        <canvas id="game_canvas", width="480" height="320"></canvas>
+        <div style="text-align: center;">Press Space to Start/Restart the Game</div>
+    </div>
 <script src="main.js"></script>
-<script>
-
-</script>
-
 </body>
 </html>

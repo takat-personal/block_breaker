@@ -281,6 +281,7 @@ function draw(){
     //待機中 or プレイ中
     if (wait){
         BallVector();
+        init();
     }
 
     drawBall();

@@ -38,12 +38,19 @@ function drawTitleBasis(){
     titleCtx.fillText("Easy", 340, 77);
     titleCtx.fillText("Normal", 340, 167);
     titleCtx.fillText("Hard", 340, 257);
-    titleCtx.drawImage(image, 30, 30, 150, 150);
+    drawGradientBall();
 }
 
-//画像読み込み
-const image = new Image();
-image.src = "";
+function drawGradientBall(){
+    let g = titleCtx.createRadialGradient(130, 110, 3, 110, 120, 85);
+    g.addColorStop(0, 'white');
+    g.addColorStop(0.6, '#6495ed');
+    g.addColorStop(1, '#00008b');
+    titleCtx.fillStyle = g;
+    titleCtx.beginPath();
+    titleCtx.arc(110, 130, 60, 0, 2* Math.PI, false);
+    titleCtx.fill();
+}
 
 function Rounded_Rect(cx, cy, w, h, r, fColor, sColor){
     titleCtx.beginPath();
@@ -164,10 +171,10 @@ function drawBall(){
     gameCtx.closePath();
 }
 
-function changeBallColor(){
-    let hue = Math.floor(Math.random() * 361);
-    ballColor = `hsl(${hue}, 100%, 50%)`;
-}
+// function changeBallColor(){
+//     let hue = Math.floor(Math.random() * 361);
+//     ballColor = `hsl(${hue}, 100%, 50%)`;
+// }
 
 //パドル描画
 let paddleColor = "blue";
@@ -178,6 +185,7 @@ function drawPaddle(){
     gameCtx.fill();
     gameCtx.closePath();
 }
+
 function changePaddleColor(){
     let hue = Math.floor(Math.random()*360);
     paddleColor = `hsl(${hue}, 100%, 50%`;
@@ -285,6 +293,7 @@ function draw(){
     }
 
     drawBall();
+
 
     //壁の衝突判定
     if (ball_x + ballRadius> gameCanvas.width|| ball_x - ballRadius< 0){
